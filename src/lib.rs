@@ -6,7 +6,7 @@ use csv::Trim;
 use serde::Deserialize;
 
 use crate::transaction::{process_transaction, Transaction};
-use crate::transaction_type::Type;
+use crate::transaction_type::TransactionType;
 
 mod account;
 mod transaction;
@@ -16,7 +16,7 @@ mod transaction_type;
 #[derive(Debug, Deserialize)]
 pub struct TransactionData {
     #[serde(rename = "type")]
-    t_type: Type,
+    t_type: TransactionType,
     client: u16,
     #[serde(rename = "tx")]
     id: u32,
