@@ -20,9 +20,9 @@ pub struct Transaction {
 }
 
 impl Transaction {
-    pub fn new(t_type: TransactionType, client: u16, amount: f32) -> Self {
+    pub fn new(transaction_type: TransactionType, client: u16, amount: f32) -> Self {
         Self {
-            transaction_type: t_type,
+            transaction_type,
             client,
             amount,
             state: None,
@@ -36,7 +36,7 @@ pub fn process_transaction(
     transactions: &mut HashMap<u32, Transaction>,
     accounts: &mut HashMap<u16, Account>,
 ) {
-    match transaction_data.t_type {
+    match transaction_data.transaction_type {
         TransactionType::Deposit => {
             if let Some(amount) = transaction_data.amount {
                 if let Some(account) = accounts.get_mut(&transaction_data.client) {
@@ -46,7 +46,7 @@ pub fn process_transaction(
                 }
                 transactions.insert(
                     transaction_data.id,
-                    Transaction::new(transaction_data.t_type, transaction_data.client, amount),
+                    Transaction::new(transaction_data.transaction_type, transaction_data.client, amount),
                 );
             }
         }
@@ -59,7 +59,7 @@ pub fn process_transaction(
                 }
                 transactions.insert(
                     transaction_data.id,
-                    Transaction::new(transaction_data.t_type, transaction_data.client, amount),
+                    Transaction::new(transaction_data.transaction_type, transaction_data.client, amount),
                 );
             }
         }
@@ -112,7 +112,7 @@ mod tests {
 
         process_transaction(
             &TransactionData {
-                t_type: TransactionType::Deposit,
+                transaction_type: TransactionType::Deposit,
                 id: 1,
                 client: 1,
                 amount: Some(1.1234),
@@ -136,7 +136,7 @@ mod tests {
 
         process_transaction(
             &TransactionData {
-                t_type: TransactionType::Withdrawal,
+                transaction_type: TransactionType::Withdrawal,
                 id: 1,
                 client: 1,
                 amount: Some(1.1234),
@@ -160,7 +160,7 @@ mod tests {
 
         process_transaction(
             &TransactionData {
-                t_type: TransactionType::Dispute,
+                transaction_type: TransactionType::Dispute,
                 id: 1,
                 client: 1,
                 amount: None,
@@ -186,7 +186,7 @@ mod tests {
 
         process_transaction(
             &TransactionData {
-                t_type: TransactionType::Resolve,
+                transaction_type: TransactionType::Resolve,
                 id: 1,
                 client: 1,
                 amount: None,
@@ -215,7 +215,7 @@ mod tests {
 
         process_transaction(
             &TransactionData {
-                t_type: TransactionType::Chargeback,
+                transaction_type: TransactionType::Chargeback,
                 id: 1,
                 client: 1,
                 amount: None,

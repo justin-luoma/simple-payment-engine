@@ -16,7 +16,7 @@ mod transaction_type;
 #[derive(Debug, Deserialize)]
 pub struct TransactionData {
     #[serde(rename = "type")]
-    t_type: TransactionType,
+    transaction_type: TransactionType,
     client: u16,
     #[serde(rename = "tx")]
     id: u32,
@@ -30,10 +30,16 @@ pub fn process_csv_file(path: &str) -> Result<HashMap<u16, Account>, Box<dyn Err
     let mut transactions: HashMap<u32, Transaction> = HashMap::new();
     let mut accounts: HashMap<u16, Account> = HashMap::new();
 
-    let mut reader = csv::ReaderBuilder::new().trim(Trim::All).from_path(path)?;
-    for transaction in reader.deserialize().flatten() {
-        process_transaction(&transaction, &mut transactions, &mut accounts);
-    }
+    let mut reader = csv::ReaderBuilder::new()
+        .trim(Trim::All)
+        .from_path(path)?;
+
+    reader
+        .deserialize()
+        .flatten()
+        .for_each(|transaction_data| {
+            process_transaction(&transaction_data, &mut transactions, &mut accounts)
+        });
 
     Ok(accounts)
 }
