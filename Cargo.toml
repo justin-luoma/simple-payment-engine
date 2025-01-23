@@ -1,6 +1,6 @@
 [package]
 name = "simple-payment-engine"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2021"
 authors = ["Justin Luoma <me@justin.rs>"]
 license = "MIT"
