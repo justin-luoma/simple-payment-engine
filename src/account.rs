@@ -1,6 +1,7 @@
 use crate::transaction::Transaction;
 use crate::TransactionData;
 use std::collections::HashMap;
+use std::error::Error;
 
 /// Represents a single account
 #[derive(Debug, PartialEq)]
@@ -23,9 +24,10 @@ impl Account {
         }
     }
 
-    pub(crate) fn update(&mut self, transaction: TransactionData) {
+    pub(crate) fn update(&mut self, transaction: TransactionData) -> Result<(), Box<dyn Error>> {
         if self.id == transaction.client {
-            transaction.process(self);
+            transaction.process(self)?;
         }
+        Ok(())
     }
 }

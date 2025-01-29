@@ -25,14 +25,18 @@ pub struct TransactionData {
 
 impl TransactionData {
     /// Process a single transaction record, updating the passed in account
-    pub fn process(&self, account: &mut Account) {
+    pub fn process(&self, account: &mut Account) -> Result<(), Box<dyn Error>> {
         match self.transaction_type {
             TransactionType::Deposit => {
                 account.available += self.amount.unwrap();
 
                 account.transactions.insert(
                     self.id,
-                    Transaction::new(self.transaction_type, self.client, self.amount.unwrap()),
+                    Transaction::new(
+                        self.transaction_type,
+                        self.client,
+                        self.amount.ok_or("Deposits should have an amount")?,
+                    ),
                 );
             }
 
@@ -41,7 +45,11 @@ impl TransactionData {
                     account.available -= self.amount.unwrap();
                     account.transactions.insert(
                         self.id,
-                        Transaction::new(self.transaction_type, self.client, self.amount.unwrap()),
+                        Transaction::new(
+                            self.transaction_type,
+                            self.client,
+                            self.amount.ok_or("Withdrawals should have an amount")?,
+                        ),
                     );
                 }
             }
@@ -78,6 +86,7 @@ impl TransactionData {
                 }
             }
         }
+        Ok(())
     }
 }
 
@@ -89,19 +98,16 @@ pub fn process_csv_file(path: &str) -> Result<HashMap<u16, Account>, Box<dyn Err
 
     let mut reader = csv::ReaderBuilder::new().trim(Trim::All).from_path(path)?;
 
-    reader
-        .deserialize()
-        .flatten()
-        .for_each(|transaction_data: TransactionData| {
-            if let Some(account) = accounts.get_mut(&transaction_data.client) {
-                account.update(transaction_data);
-            } else if transaction_data.transaction_type == TransactionType::Deposit {
-                let mut account = Account::new(transaction_data.client);
-                let client = transaction_data.client;
-                account.update(transaction_data);
-                accounts.insert(client, account);
-            }
-        });
+    for transaction_data in reader.deserialize::<TransactionData>().flatten() {
+        if let Some(account) = accounts.get_mut(&transaction_data.client) {
+            account.update(transaction_data)?;
+        } else if transaction_data.transaction_type == TransactionType::Deposit {
+            let mut account = Account::new(transaction_data.client);
+            let client = transaction_data.client;
+            account.update(transaction_data)?;
+            accounts.insert(client, account);
+        }
+    }
 
     Ok(accounts)
 }
@@ -152,7 +158,10 @@ mod tests {
 
         let actual = process_csv_file("./data/inputs/test_all_transactions.csv").unwrap();
         assert_eq!(expected_account_1.id, actual.get(&1).unwrap().id);
-        assert_eq!(expected_account_1.available, actual.get(&1).unwrap().available);
+        assert_eq!(
+            expected_account_1.available,
+            actual.get(&1).unwrap().available
+        );
         assert_eq!(expected_account_1.locked, actual.get(&1).unwrap().locked);
         assert_eq!(expected_account_1.held, actual.get(&1).unwrap().held);
         assert_eq!(
